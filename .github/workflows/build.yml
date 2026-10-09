@@ -7,47 +7,19 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Build APK with Buildozer Action
+      uses: ArtemGovorov/buildozer-action@v1
+      id: buildozer
       with:
-        python-version: '3.10'
-
-    - name: Install System Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libssl-dev cmake libffi-dev libtinfo5
-
-    - name: Install Buildozer and Cython
-      run: |
-        python -m pip install --upgrade pip
-        pip install "buildozer>=1.5.0" "cython>=0.29.33,<3.0" "Kivy>=2.2.0"
-
-    - name: Pre-Accept Android Licenses & Build
-      run: |
-        # 1. Android Commandline Tools ko manually install kar rahe hain taaki sdkmanager pehle se rahe
-        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools
-        wget -q https://google.com -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip -d /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools
-        mv /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/cmdline-tools /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
-        
-        # 2. Environment variables set karein taaki buildozer isko reuse karein
-        export ANDROID_HOME=/home/runner/.buildozer/android/platform/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-        
-        # 3. Direct licenses ko automatically accept karein
-        mkdir -p $ANDROID_HOME/licenses
-        echo -e "247a1c6d50f85b38a4b3b753d9d4d53bc7f2d89e\n84831b9409646a918e30573bab4c9c91346d8abd\n504667f4c0de7af1a06de9f4b1727b84351f2910" > $ANDROID_HOME/licenses/android-sdk-license
-        
-        # 4. Final Buildozer Run
-        buildozer android debug
-      env:
-        ACCEPT_SDK_LICENSE_NET: y
+        buildozer_version: stable
+        command: buildozer android debug
+        repository_root: .
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
