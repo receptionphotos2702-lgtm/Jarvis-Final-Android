@@ -28,20 +28,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install "buildozer>=1.5.0" "cython>=0.29.33,<3.0" "Kivy>=2.2.0"
 
-    - name: Force Accept Android Licenses & Build
+    - name: Pre-Accept Android Licenses & Build
       run: |
-        # SDK Manager folders setup
-        mkdir -p ~/.android && touch ~/.android/repositories.cfg
+        # 1. Android Commandline Tools ko manually install kar rahe hain taaki sdkmanager pehle se rahe
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools
+        wget -q https://google.com -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip -d /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools
+        mv /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/cmdline-tools /home/runner/.buildozer/android/platform/android-sdk/cmdline-tools/latest
         
-        # Buildozer ke automatic licenses folder ko pehle se hi 'accepted' mark karna
-        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
-        echo -e "247a1c6d50f85b38a4b3b753d9d4d53bc7f2d89e\n84831b9409646a918e30573bab4c9c91346d8abd\n504667f4c0de7af1a06de9f4b1727b84351f2910" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        # 2. Environment variables set karein taaki buildozer isko reuse karein
+        export ANDROID_HOME=/home/runner/.buildozer/android/platform/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
         
-        # Build command with forced accept options
+        # 3. Direct licenses ko automatically accept karein
+        mkdir -p $ANDROID_HOME/licenses
+        echo -e "247a1c6d50f85b38a4b3b753d9d4d53bc7f2d89e\n84831b9409646a918e30573bab4c9c91346d8abd\n504667f4c0de7af1a06de9f4b1727b84351f2910" > $ANDROID_HOME/licenses/android-sdk-license
+        
+        # 4. Final Buildozer Run
         buildozer android debug
       env:
         ACCEPT_SDK_LICENSE_NET: y
-        ANDROID_LAUNCHER_DEBUG: 1
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
