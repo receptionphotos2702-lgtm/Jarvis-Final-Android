@@ -28,11 +28,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install "buildozer>=1.5.0" "cython>=0.29.33,<3.0" "Kivy>=2.2.0"
 
-    - name: Build with Buildozer
+    - name: Force Accept Android Licenses & Build
       run: |
+        # SDK Manager folders setup
+        mkdir -p ~/.android && touch ~/.android/repositories.cfg
+        
+        # Buildozer ke automatic licenses folder ko pehle se hi 'accepted' mark karna
+        mkdir -p /home/runner/.buildozer/android/platform/android-sdk/licenses
+        echo -e "247a1c6d50f85b38a4b3b753d9d4d53bc7f2d89e\n84831b9409646a918e30573bab4c9c91346d8abd\n504667f4c0de7af1a06de9f4b1727b84351f2910" > /home/runner/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        
+        # Build command with forced accept options
         buildozer android debug
       env:
         ACCEPT_SDK_LICENSE_NET: y
+        ANDROID_LAUNCHER_DEBUG: 1
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
